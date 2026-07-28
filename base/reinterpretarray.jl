@@ -397,7 +397,8 @@ axes(a::NonReshapedReinterpretArray{T,0}) where {T} = ()
 
 has_offset_axes(a::ReinterpretArray) = has_offset_axes(a.parent)
 
-elsize(::Type{<:ReinterpretArray{T}}) where {T} = sizeof(T)
+elsize(::Type{<:ReinterpretArray{T,<:Any,S}}) where {T,S} =
+    sizeof(T) == sizeof(S) ? aligned_sizeof(S) : sizeof(T)
 cconvert(::Type{Ptr{T}}, a::ReinterpretArray{T,N,S} where N) where {T,S} = cconvert(Ptr{S}, a.parent)
 unsafe_convert(::Type{Ptr{T}}, a::ReinterpretArray{T,N,S} where N) where {T,S} = Ptr{T}(unsafe_convert(Ptr{S},a.parent))
 
@@ -451,7 +452,7 @@ end
     @boundscheck checkbounds(a, inds...)
     li = _to_linear_index(a, inds...)
     ap = cconvert(Ptr{T}, a)
-    p = unsafe_convert(Ptr{T}, ap) + sizeof(T) * (li - 1)
+    p = unsafe_convert(Ptr{T}, ap) + elsize(a) * (li - 1)
     GC.@preserve ap return unsafe_load(p)
 end
 
@@ -600,7 +601,7 @@ end
     @boundscheck checkbounds(a, inds...)
     li = _to_linear_index(a, inds...)
     ap = cconvert(Ptr{T}, a)
-    p = unsafe_convert(Ptr{T}, ap) + sizeof(T) * (li - 1)
+    p = unsafe_convert(Ptr{T}, ap) + elsize(a) * (li - 1)
     GC.@preserve ap unsafe_store!(p, v)
     return a
 end
