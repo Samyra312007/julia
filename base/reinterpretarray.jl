@@ -601,7 +601,7 @@ end
     @boundscheck checkbounds(a, inds...)
     li = _to_linear_index(a, inds...)
     ap = cconvert(Ptr{T}, a)
-    p = unsafe_convert(Ptr{T}, ap) + aligned_sizeof(T) * (li - 1)
+    p = unsafe_convert(Ptr{T}, ap) + elsize(a) * (li - 1)
     GC.@preserve ap unsafe_store!(p, v)
     return a
 end
